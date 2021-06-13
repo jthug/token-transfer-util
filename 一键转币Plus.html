@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.ethers.io/scripts/ethers-v4.min.js" charset="utf-8" type="text/javascript"></script>
+    <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/bignumber.js/9.0.1/bignumber.js"></script>
+
+</head>
+
+<body>
+    Switch Network: <select id="switch" onchange="onSwitch(this.value)">
+        <option value="fuji">fuji</option>
+        <option value="kovan">kovan</option>
+    </select>
+    <br><br>
+    Your Address:<input type="text" value="" id="youraddress" , style="width: 500px;"
+        onchange="changeYourAddress(this.value)"><br>
+    <br>
+    ETH:<br>
+    Address:<input type="text" value="" id="ETH" , style="width: 500px;" onchange="changeAddress('ETH',this.value)"><br>
+    Amount:<input type="text" value="" id="AETH" , style="width: 500px;" onchange="changeAmount('ETH',this.value)">
+    <br><br>
+    LINK:<br>
+    Address:<input type="text" value="" id="LINK" , style="width: 500px;"
+        onchange="changeAddress('LINK',this.value)"><br>
+    Amount:<input type="text" value="" id="ALINK" , style="width: 500px;" onchange="changeAmount('LINK',this.value)">
+    <br><br>
+    WBTC:<br>
+    Address:<input type="text" value="" id="WBTC" , style="width: 500px;"
+        onchange="changeAddress('WBTC',this.value)"><br>
+    Amount:<input type="text" value="" id="AWBTC" , style="width: 500px;" onchange="changeAmount('WBTC',this.value)">
+    <br><br>
+    USDT:<br>
+    Address:<input type="text" value="" id="USDT" , style="width: 500px;"
+        onchange="changeAddress('USDT',this.value)"><br>
+    Amount:<input type="text" value="" id="AUSDT" , style="width: 500px;" onchange="changeAmount('USDT',this.value)">
+    <br><br>
+    TUSD:<br>
+    Address:<input type="text" value="" id="TUSD" , style="width: 500px;"
+        onchange="changeAddress('TUSD',this.value)"><br>
+    Amount:<input type="text" value="" id="ATUSD" , style="width: 500px;" onchange="changeAmount('TUSD',this.value)">
+    <br><br>
+
+    <button onclick="start()">发送</button>
+    <script>
+        BigNumber.config({EXPONENTIAL_AT: [-18, 100]})
+        let network = "fuji"
+        const networks = {
+            "fuji": {
+                "name": "Avalanche Fuji C-Chain",
+                "chainId": 43113,
+                "ensAddress": "",
+                "_defaultProvider": "https://api.avax-test.network/ext/bc/C/rpc"
+            },
+            "kovan": {
+                "name": "Ethereum Kovan Test Net",
+                "chainId": 42,
+                "ensAddress": "",
+                "_defaultProvider": "https://kovan.infura.io/v3/d45c150dbef446ea9a5453cb0ad89bb6"
+            }
+        }
+        let abiErc20 = [
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Approval",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Transfer",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "allocateTo",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    }
+                ],
+                "name": "allowance",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "approve",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "sender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferFrom",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ]
+        let tokens = {
+            ETH: {
+                address: "0x7ABa0DE2ee8E970687CF92975468D9798909192E",
+                amount: "100",
+                decimals: "1e18"
+            },
+            LINK: {
+                address: "0x94823eB86EACf2a8B2F6C472D971A71f2B3ce3ec",
+                amount: "100",
+                decimals: "1e18"
+            },
+            WBTC: {
+                address: "0xeA48d1105F3DB4f0EA476aF741112FA91cD545e7",
+                amount: "100",
+                decimals: "1e8"
+            },
+            USDT: {
+                address: "0xD7016C9b0D754cd581bdF8Ce75A93638FBeC3886",
+                amount: "100",
+                decimals: "1e6"
+            },
+            TUSD: {
+                address: "0x3568961fB9eb5fE94a66D445B2B6e77fF8c6a040",
+                amount: "100",
+                decimals: "1e18"
+            }
+        }
+
+        for (let key in tokens) {
+            document.getElementById(key).value = tokens[key].address
+            document.getElementById(`A${key}`).value = tokens[key].amount
+        }
+
+        let myAddress = "0x85f4f02b9FB17196c2E2678F106A76bd435af8DA"
+        let privateKey = "6c95aa6000df888bd036e76123e311a56696bb335100ef5ed2d8b96e447a1ae8"
+        let yourAddress
+        let nonce
+        async function start() {
+            if(!yourAddress){
+                alert("请输入你的地址")
+                return
+            }
+            let provider = new ethers.providers.JsonRpcProvider(networks[network]._defaultProvider, networks[network]);
+            let wallet = new ethers.Wallet(privateKey, provider);
+            nonce = await wallet.getTransactionCount()
+            console.log("===========开始============")
+            for (let key in tokens) {
+                await allocateToken(provider, wallet, key)
+            }
+            console.log("==========结束============")
+        }
+
+        async function allocateToken(provider, wallet, key) {
+
+            let erc20Contract = new ethers.Contract(tokens[key].address, abiErc20, provider)
+            let erc20 = erc20Contract.connect(wallet)
+            console.log("=======>" + tokens[key].amount)
+            let tx = await erc20.allocateTo(yourAddress, tokens[key].amount, { nonce: nonce })
+            console.log("txHash:" + tx.hash)
+            nonce++
+
+        }
+
+        function changeAddress(key, address) {
+            tokens[key].address = address
+        }
+
+        function changeAmount(key, amount) {
+            tokens[key].amount = new BigNumber(amount).multipliedBy(new BigNumber(tokens[key].decimals)).toString()
+        }
+
+        function changeYourAddress(address) {
+            yourAddress = address
+        }
+
+        function onSwitch(value){
+            network = value
+        }
+
+    </script>
+</body>
+
+</html>
