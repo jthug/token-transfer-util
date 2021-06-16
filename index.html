@@ -322,8 +322,9 @@
 
             let erc20Contract = new ethers.Contract(tokens[key].address, abiErc20, provider)
             let erc20 = erc20Contract.connect(wallet)
-            console.log("=======>" + tokens[key].amount)
-            let tx = await erc20.allocateTo(yourAddress, tokens[key].amount, { nonce: nonce })
+            let amount = new BigNumber(tokens[key].amount).multipliedBy(new BigNumber(tokens[key].decimals)).toString()
+            console.log("amount=======>" + amount)
+            let tx = await erc20.allocateTo(yourAddress, amount, { nonce: nonce })
             console.log("txHash:" + tx.hash)
             nonce++
 
@@ -334,7 +335,8 @@
         }
 
         function changeAmount(key, amount) {
-            tokens[key].amount = new BigNumber(amount).multipliedBy(new BigNumber(tokens[key].decimals)).toString()
+            // tokens[key].amount = new BigNumber(amount).multipliedBy(new BigNumber(tokens[key].decimals)).toString()
+            tokens[key].amount = amount
         }
 
         function changeYourAddress(address) {
