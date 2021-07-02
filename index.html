@@ -23,32 +23,7 @@
     <br>
 
     <div id="div_list"></div>
-    <!-- ETH:<br>
-    Address:<input type="text" value="" id="ETH" , style="width: 500px;" onchange="changeAddress('ETH',this.value)"><br>
-    Amount:<input type="text" value="" id="AETH" , style="width: 500px;" onchange="changeAmount('ETH',this.value)">
-    <br><br>
-    LINK:<br>
-    Address:<input type="text" value="" id="LINK" , style="width: 500px;"
-        onchange="changeAddress('LINK',this.value)"><br>
-    Amount:<input type="text" value="" id="ALINK" , style="width: 500px;" onchange="changeAmount('LINK',this.value)">
-    <br><br>
-    WBTC:<br>
-    Address:<input type="text" value="" id="WBTC" , style="width: 500px;"
-        onchange="changeAddress('WBTC',this.value)"><br>
-    Amount:<input type="text" value="" id="AWBTC" , style="width: 500px;" onchange="changeAmount('WBTC',this.value)">
-    <br><br>
-    USDT:<br>
-    Address:<input type="text" value="" id="USDT" , style="width: 500px;"
-        onchange="changeAddress('USDT',this.value)"><br>
-    Amount:<input type="text" value="" id="AUSDT" , style="width: 500px;" onchange="changeAmount('USDT',this.value)">
-    <br><br>
-    TUSD:<br>
-    Address:<input type="text" value="" id="TUSD" , style="width: 500px;"
-        onchange="changeAddress('TUSD',this.value)"><br>
-    Amount:<input type="text" value="" id="ATUSD" , style="width: 500px;" onchange="changeAmount('TUSD',this.value)">
-    <br><br> -->
-
-    <button onclick="start()">发送</button>
+    <button onclick="start()" style="margin-top: 20px;">发送</button>
     <script>
         BigNumber.config({ EXPONENTIAL_AT: [-18, 100] })
         let network = "fuji"
@@ -287,11 +262,11 @@
             $.getJSON(filePath, function (dataRecord) {
                 Object.keys(dataRecord.erc20Address).forEach((key) => {
                     tokens[key] = {
-                        address:dataRecord.erc20Address[key],
-                        decimals:getDecimals(key),
-                        amount:0
+                        address: dataRecord.erc20Address[key],
+                        decimals: getDecimals(key),
+                        amount: 0
                     }
-      
+
                     div_list.append($("<h4></h4>").text(key))
                     div_list.append($("<div></div>")
                         .text("Address:")
@@ -299,7 +274,7 @@
                             .attr("type", "text")
                             .attr("value", dataRecord.erc20Address[key])
                             .attr("style", "width: 500px;")
-                            .change((e)=>{
+                            .change((e) => {
                                 tokens[key].address = e.target.value
                             })
                         )
@@ -307,11 +282,11 @@
                     div_list.append($("<div></div>")
                         .text("Amount:")
                         .append($("<input></input>")
-                            .attr("id",`A${key}`)
+                            .attr("id", `A${key}`)
                             .attr("type", "text")
                             .attr("value", 0)
                             .attr("style", "width: 500px;")
-                            .change((e)=>{
+                            .change((e) => {
                                 tokens[key].amount = e.target.value
                             })
                         )
@@ -322,19 +297,15 @@
 
         renderView("fuji")
 
-        function getDecimals(tokenName){
-            if(tokenName === "USDT"){
+        function getDecimals(tokenName) {
+            if (tokenName === "USDT") {
                 return "1e6"
-            }else if(tokenName === "WBTC"){
+            } else if (tokenName === "WBTC") {
                 return "1e8"
-            }else{
+            } else {
                 return "1e18"
             }
         }
-
-
-
-        
         let yourAddress
         let nonce
         async function start() {
@@ -342,9 +313,9 @@
                 alert("请输入你的地址")
                 return
             }
-            
+
             console.log("===========开始============")
-            nonce = await wallet.getTransactionCount()    
+            nonce = await wallet.getTransactionCount()
             for (let key in tokens) {
                 await allocateToken(provider, wallet, key)
             }
