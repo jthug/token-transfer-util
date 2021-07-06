@@ -21,6 +21,7 @@
     Your Address:<input type="text" value="" id="youraddress" , style="width: 500px;"
         onchange="changeYourAddress(this.value)"><br>
     <br>
+    <div><span id="from"></span><span id="balance"></span></div><br>
 
     <div id="div_list"></div>
     <button onclick="start()" style="margin-top: 20px;">发送</button>
@@ -251,14 +252,18 @@
         let privateKey = "6772dc2cf08f04a5c15c2cc863d6a02f94f6c426d5a4b0349cbb277322fd9571"
         let provider
         let wallet
-        function renderView(network) {
+        async function renderView(network) {
             provider = new ethers.providers.JsonRpcProvider(networks[network]._defaultProvider, networks[network]);
             wallet = new ethers.Wallet(privateKey, provider);
             const div_list = $("#div_list")
             div_list.empty()
             tokens = {}
             const filePath = `dataRecords/${network}/dataRecord.json`
-
+            let account = wallet.address
+            $("#from").text(`from: ${account}  `)
+            let balance = await wallet.getBalance()
+            $("#balance").text(`balance: ${new BigNumber(balance).dividedBy(new BigNumber("10").pow(18))}  `)
+    
             $.getJSON(filePath, function (dataRecord) {
                 Object.keys(dataRecord.erc20Address).forEach((key) => {
                     tokens[key] = {
@@ -317,6 +322,9 @@
             console.log("===========开始============")
             nonce = await wallet.getTransactionCount()
             for (let key in tokens) {
+                if(tokens[key].amount<=0){
+                    continue
+                }
                 await allocateToken(provider, wallet, key)
             }
             console.log("==========结束============")
